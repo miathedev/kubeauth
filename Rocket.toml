@@ -1,0 +1,28 @@
+[default]
+address = "0.0.0.0"
+port = 8000
+workers = 16
+max_blocking = 512
+keep_alive = 5
+ident = "Rocket"
+log_level = "normal"
+temp_dir = "/tmp"
+cli_colors = true
+## NOTE: Don't (!) use this key! Generate your own!
+secret_key = "0jjhfKcGtC6SxGgoJBC3Ac015OL3tvrKjuIvc6aQeuD1="
+
+[default.limits]
+form = "64 kB"
+json = "1 MiB"
+msgpack = "2 MiB"
+"file/jpg" = "5 MiB"
+
+[default.tls]
+certs = "/srv/kubeauth/api/kubeauth.crt"
+key =   "/srv/kubeauth/api/kubeauth.key"
+
+[default.shutdown]
+ctrlc = true
+signals = ["term", "hup"]
+grace = 5
+mercy = 5

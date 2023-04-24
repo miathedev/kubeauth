@@ -1,0 +1,25 @@
+{
+  "users": [
+      {
+          "username": "alice",
+          "password": "alicepassword",
+          "groups": [
+              "dev"
+          ]
+      },
+      {
+          "username": "bob",
+          "password": "bobpassword",
+          "groups": [
+              "dev"
+          ]
+      },
+      {
+          "username": "charlie",
+          "password": "charliepassword",
+          "groups": [
+              "dev"
+          ]
+      }
+  ]
+}

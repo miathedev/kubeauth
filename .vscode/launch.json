@@ -1,0 +1,46 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'kubeauth'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=kubeauth",
+                    "--package=kubeauth"
+                ],
+                "filter": {
+                    "name": "kubeauth",
+                    "kind": "bin"
+                },
+                
+            },
+            "args": ["-a", "json_auth"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'kubeauth'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=kubeauth",
+                    "--package=kubeauth"
+                ],
+                "filter": {
+                    "name": "kubeauth",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

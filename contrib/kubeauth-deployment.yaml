@@ -1,0 +1,29 @@
+#Deployment of the kubeauth pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeauth
+  namespace: kubeauth
+  labels:
+    app: kubeauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubeauth
+  template:
+    metadata:
+      labels:
+        app: kubeauth
+    spec:
+      containers:
+      - name: kubeauth
+        image: kubeauth:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        #For using json_auth method
+        - name: users.json
+          mountPath: /app/users.json
+          readOnly: true

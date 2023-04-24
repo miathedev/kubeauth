@@ -1,0 +1,10 @@
+[Unit]
+Description=kubeauth authentication service
+
+[Service]
+Type=simple
+ExecStart=/root/kubeauth/target/debug/kubeauth
+WorkingDirectory=/root/kubeauth
+
+[Install]
+WantedBy=multi-user.target
