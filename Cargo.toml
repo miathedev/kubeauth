@@ -1,6 +1,6 @@
 [package]
 name = "kubeauth"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["Mia Metzler <mia@metzler.systems>"]
 license = "GPL-3.0-only"
