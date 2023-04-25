@@ -3,8 +3,14 @@ Description=kubeauth authentication service
 
 [Service]
 Type=simple
-ExecStart=/root/kubeauth/target/debug/kubeauth
-WorkingDirectory=/root/kubeauth
+ExecStart=/usr/bin/kubeauth -a ldap_auth
+Environment = LDAP_SERVER_URL=ldap://localhost:3893
+Environment = LDAP_BASE_DN=dc=glauth,dc=com
+Environment = LDAP_SERVICE_ACCOUnT=serviceuser
+Environment = LDAP_SERVICE_ACCOUNT_PW=mysecret
+#Environment = FILTER="cn=\${USERNAME}"
+Environment = ROCKET_TLS={certs="/srv/kubeauth/api/kubeauth.crt",key="/srv/kubeauth/api/kubeauth.key"}
+Environment = ROCKET_address=0.0.0.0
 
 [Install]
 WantedBy=multi-user.target

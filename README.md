@@ -51,6 +51,9 @@ The authentication method is set using arguments. You can set the authentication
 Example:
 ```kubeauth -a json_auth -a ldap_auth``` will load the json_auth and ldap_auth authenticators.
 
+### Downloads
+You can download the latest release from the [releases page](https://github.com/miathedev/kubeauth/releases).
+
 ### Configure the authentication methods
 Currently kubeauth supports the following authentication methods:
   * Json file (see contrib/users.json) see [src/authenticators/README_json.md](src/authenticators/README_json.md)
@@ -58,6 +61,13 @@ Currently kubeauth supports the following authentication methods:
 
 Each authentication method has environment variables associated with it. The environment variables are used to configure the authentication method. For names of the environment variables see the README.md of the authentication method.
 
+#### Try it out
+If you want to try, if the token auth works, you can use kubectl get pods --token=alice:alicepassword. This will authenticate you as user alice.
+
+You can also use curl to test the token auth. Example:
+```
+curl --insecure -X POST -H "Content-Type: application/json" -d '{"apiVersion":"authentication.k8s.io/v1","kind":"TokenReview","metadata":{"creationTimestamp":null},"spec":{"token":"alice:alicepassword"}}' https://localhost:8000/token
+```
 ## Prerequisites
 There are a few options to install kubeauth. The current working method is installing kubeauth as standalone binary and let kubespray set all the necessary configuration. The other option is to install kubeauth as a kubernetes deployment. This is not yet fully tested and documented.
 

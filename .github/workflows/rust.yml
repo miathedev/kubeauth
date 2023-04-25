@@ -5,20 +5,38 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [created]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: Setup Nightly
       run: rustup default nightly
-    - name: Build
+    - name: Build debug
       run: cargo +nightly build --verbose
     - name: Run tests
       run: cargo +nightly test --verbose
+    - name: Build release
+      run: cargo +nightly build --verbose --release
+    #Archive the binary
+    - name: Archive release
+      uses: actions/upload-artifact@v2
+      if: github.event_name == 'release' && github.event.action == 'created'
+      with:
+        name: kubeauth
+        path: ./target/release/kubeauth    
+    #Upload the binary to the release
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      #Run if release is created
+      if: github.event_name == 'release' && github.event.action == 'created'
+      with:
+        files: ./target/release/kubeauth
+        token: ${{ secrets.RELEASE_TOKEN }}

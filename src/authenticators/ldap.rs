@@ -87,9 +87,15 @@ impl Authenticator for LdapAuthenticator {
             .simple_bind(&bind_string, &self.service_account_password)
             .await;
 
-        if bind.is_err() {
-            println!("Failed to bind to service account");
-            return (false, String::from(""), vec![]);
+        //TODO: this check is not working, even if bind fails, it still returns Ok...
+        match bind {
+            Ok(ldapResult) => {
+                println!("Successfully bound to service account");
+            }
+            Err(e) => {
+                println!("Failed to bind to service account");
+                return (false, String::from(""), vec![]);
+            }
         }
 
         //Build filter string, use usually not used symbols for variable replacement
@@ -112,7 +118,28 @@ impl Authenticator for LdapAuthenticator {
             .await
             .unwrap();
 
-        let entry = SearchEntry::construct(search.next().await.unwrap().unwrap());
+        //Capture error
+        let entry = search.next().await;
+        //Completly unwrap entry but handle errors
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(e) => {
+                println!("Error while searching for user: {}", e);
+                return (false, String::from(""), vec![]);
+            }
+        };
+
+        
+        let entry = match entry {
+            Some(entry) => entry,
+            None => {
+                println!("No entry found, failed to find user");
+                return (false, String::from(""), vec![]);
+            }
+        };
+
+        //Convert entry to SearchEntry
+        let entry = SearchEntry::construct(entry);
 
         //println!("entry: {:?}", entry);
         //Get ou from entry.dn
