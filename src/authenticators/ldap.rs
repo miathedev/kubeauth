@@ -75,9 +75,25 @@ impl Authenticator for LdapAuthenticator {
 
         //try to bind to user and check if it is successful, to check if username and password are correct
         let bind = ldap.simple_bind(&bind_string, password).await;
-        if bind.is_err() {
-            println!("Failed to bind to user");
-            return (false, String::from(""), vec![]);
+        match bind {
+            Ok(ldapResult) => {
+                //RC 49 means invalid credentials
+                if ldapResult.rc == 49 {
+                    println!("Invalid credentials");
+                    return (false, String::from(""), vec![]);
+                } //RC 0 means success
+                else if ldapResult.rc == 0 {
+                    println!("Successfully bound to user");
+                } else {
+                    println!("Unknown error");
+                    return (false, String::from(""), vec![]);
+                }
+                println!("Successfully bound to user");
+            }
+            Err(e) => {
+                println!("Failed to bind to user");
+                return (false, String::from(""), vec![]);
+            }
         }
 
         //bind string !format
@@ -90,10 +106,21 @@ impl Authenticator for LdapAuthenticator {
         //TODO: this check is not working, even if bind fails, it still returns Ok...
         match bind {
             Ok(ldapResult) => {
-                println!("Successfully bound to service account");
+                //RC 49 means invalid credentials
+                if ldapResult.rc == 49 {
+                    println!("Invalid credentials");
+                    return (false, String::from(""), vec![]);
+                } //RC 0 means success
+                else if ldapResult.rc == 0 {
+                    println!("Successfully bound to service account to get groups");
+                } else {
+                    println!("Unknown error");
+                    return (false, String::from(""), vec![]);
+                }
+                println!("Successfully bound to user");
             }
             Err(e) => {
-                println!("Failed to bind to service account");
+                println!("Failed to bind to user");
                 return (false, String::from(""), vec![]);
             }
         }

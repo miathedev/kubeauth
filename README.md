@@ -62,7 +62,11 @@ Currently kubeauth supports the following authentication methods:
 Each authentication method has environment variables associated with it. The environment variables are used to configure the authentication method. For names of the environment variables see the README.md of the authentication method.
 
 #### Try it out
-If you want to try, if the token auth works, you can use kubectl get pods --token=alice:alicepassword. This will authenticate you as user alice.
+If you want to try, if the token auth works, you can use 
+```
+kubectl get pods --token=alice:alicepassword
+```
+This will authenticate you as user alice.
 
 You can also use curl to test the token auth. Example:
 ```
