@@ -132,8 +132,7 @@ spec:
         - name: LDAP_SERVICE_PASSWORD
           value: "mysecret"
         #CMD args
-        args:
-        - " -a ldap_auth"
+        args: ["-a", "ldap_auth"]
 
       - name: glauth
         image: glauth/glauth
@@ -147,3 +146,18 @@ spec:
           requests:
             memory: "64Mi"
             cpu: "250m"
+        #glauth config
+        volumeMounts:
+        - name: glauth-config
+          mountPath: /etc/glauth
+          readOnly: true
+        args: ["-f", "/etc/glauth"]
+      volumes:
+      - name: glauth-config
+        configMap:
+          name: glauth-config
+          items:
+          - key: glauth.cfg
+            path: glauth.cfg
+      
+
