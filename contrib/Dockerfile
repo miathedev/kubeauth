@@ -1,7 +1,7 @@
 #Docker file for rust kubeauth
 #Multi stage build
 #Build stage
-FROM rust:1.69.0-buster as builder
+FROM rust:nightly-buster-slim as builder
 WORKDIR /usr/src/kubeauth
 COPY . .
 RUN cargo install --path .
