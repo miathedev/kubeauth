@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev
 RUN cargo install --path .
 
 
+#Install libssl.so.1.1
+RUN apt-get update && apt-get install -y libssl1.1
+
 #Final stage
 FROM debian:buster-slim
 COPY --from=builder /usr/local/cargo/bin/kubeauth /usr/local/bin/kubeauth
