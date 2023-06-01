@@ -31,7 +31,7 @@ pub struct JsonAuthenticator {
 }
 
 impl Authenticator for JsonAuthenticator {
-    async fn auth(&self, token: &str, arguments: &HashMap<String, Vec<String>>) -> (bool, String, Vec<String>) {
+    async fn auth(&self, token: &str) -> (bool, String, Vec<String>) {
         //Split token by :
         let token_split: Vec<&str> = token.split(":").collect();
 
@@ -86,10 +86,18 @@ impl Authenticator for JsonAuthenticator {
     }
 
     
-    fn new (arguments: &HashMap<String, Vec<String>>) -> Self {
-        //Get the users file path, default to users.json
-        let users_file_path = env::var("USERS_FILE_PATH").unwrap_or("users.json".to_string());
+    fn new (arguments: HashMap<String, Vec<String>>) -> Self {
+        println!("Loading json_auth authenticator");
+        
+        //Get -u --users-file-path argument
+        let users_file_path = arguments.get("u").or(arguments.get("user_file_path"));
 
+        //if users_file_path is None, try to get it from env var USERS_FILE_PATH
+        let users_file_path = match users_file_path {
+            Some(users_file_path) => users_file_path[0].clone(),
+            None => env::var("USERS_FILE_PATH").expect("Failed to get users file path from env var and no -u or --users-file-path argument was specified")
+        };
+        
         //Check if file exists
         if !std::path::Path::new(&users_file_path).exists() {
             panic!("Users file does not exist or env var USERS_FILE_PATH is not set");

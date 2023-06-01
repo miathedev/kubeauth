@@ -20,6 +20,7 @@ This application is licensed under the MIT license.
 //Import the required libraries
 use core::str;
 use std::collections::HashMap;
+use authenticators::ldap::LdapAuthenticator;
 use rocket::config::Config as RocketConfig;
 use rocket::futures;
 use rocket::http::Status;
@@ -49,6 +50,7 @@ async fn index() -> &'static str {
 async fn run_auth_pipeline(
     authenticators: &Vec<String>,
     arguments: &HashMap<String, Vec<String>>, //Arguments are or could be used to pass parameters to authenticators
+    shared: &State<SharedData>,
     token: &str,
 ) -> (bool, String, Vec<String>) {
     //Loop through authenticators
@@ -57,10 +59,10 @@ async fn run_auth_pipeline(
         match authenticator.as_str() {
             "json_auth" => {
                 //Create json auther
-                let json_auther = JsonAuthenticator::new(arguments);
+                let json_auth = shared.json_auth_mod.lock().await;
 
                 //Run auth
-                let (auth, username, groups) = json_auther.auth(token, &arguments).await;
+                let (auth, username, groups) = json_auth.auth(token).await;
 
                 //Check if auth was successful
                 if auth {
@@ -70,10 +72,10 @@ async fn run_auth_pipeline(
             }
             "ldap_auth" => {
                 //Create ldap auther
-                let ldap_auther = authenticators::ldap::LdapAuthenticator::new(arguments);
+                let ldap_auth = shared.ldap_auth_mod.lock().await;
 
                 //Run auth
-                let (auth, username, groups) = ldap_auther.auth(token, &arguments).await;
+                let (auth, username, groups) = ldap_auth.auth(token).await;
 
                 //Check if auth was successful
                 if auth {
@@ -109,7 +111,7 @@ async fn validate_token(
     let arguments = shared.arguments.lock().await;
 
     //Run auth pipeline
-    let (auth, username, groups) = run_auth_pipeline(&authenticators, &arguments, token).await;
+    let (auth, username, groups) = run_auth_pipeline(&authenticators, &arguments, &shared, token).await;
 
     //Check if auth was successful
     if auth {
@@ -128,6 +130,8 @@ async fn validate_token(
 struct SharedData {
     authenticators: futures::lock::Mutex<Vec<String>>,
     arguments: futures::lock::Mutex<HashMap<String, Vec<String>>>,
+    json_auth_mod: futures::lock::Mutex<JsonAuthenticator>,
+    ldap_auth_mod: futures::lock::Mutex<LdapAuthenticator>,
 }
 
 #[launch]
@@ -205,10 +209,16 @@ fn rocket() -> _ {
     //Print authenticators
     println!("Authenticators: {:?}", authenticators_vec);
 
+    let test = arguments.clone();
+    let test2 = arguments.clone();
     //Create shared data
+    //TODO: For example json_auth_mod can be not selected, but it still expects the arguments and will panic if not.
+    //TODO: Maybe add a check if authenticator is selected and if not, don't add it to shared data
     let shared_data = SharedData {
         authenticators: futures::lock::Mutex::new(authenticators_vec),
         arguments: futures::lock::Mutex::new(arguments),
+        json_auth_mod: futures::lock::Mutex::new(JsonAuthenticator::new(test)),
+        ldap_auth_mod: futures::lock::Mutex::new(LdapAuthenticator::new(test2)),
     };
 
     let mut config = RocketConfig::release_default();
