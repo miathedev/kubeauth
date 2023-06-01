@@ -1,0 +1,10 @@
+[Unit]
+Description=kubeauth authentication service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kubeauth -a json_auth
+Environment = USERS_FILE_PATH=/etc/kubeauth/users.json
+
+[Install]
+WantedBy=multi-user.target
