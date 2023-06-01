@@ -3,6 +3,9 @@
 ___
 # How to install kubeauth
 
+## Releases
+You can download the latest release from the release page. The master branch is the development branch. So it may be unstable. Which should be often the case. So i recommend to use the latest release.
+
 ## Arguments
 ```
 KubeAuth is a simple authentication provider for kubernetes.
