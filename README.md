@@ -122,7 +122,7 @@ Also, when kubeauth doesnt run, the kubeapi will still work because authentifica
 # Build dependencies
 
 ```
-sudo apt-get install libsasl2-dev libldap2-dev libssl-dev
+sudo apt-get install libsasl2-dev libldap2-dev libssl-dev pkg-config
 ```
 
 # Disclaimer
