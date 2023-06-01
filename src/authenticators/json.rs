@@ -86,7 +86,7 @@ impl Authenticator for JsonAuthenticator {
     }
 
     
-    fn new () -> Self {
+    fn new (arguments: &HashMap<String, Vec<String>>) -> Self {
         //Get the users file path, default to users.json
         let users_file_path = env::var("USERS_FILE_PATH").unwrap_or("users.json".to_string());
 

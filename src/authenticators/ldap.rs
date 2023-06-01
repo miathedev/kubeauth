@@ -191,7 +191,7 @@ impl Authenticator for LdapAuthenticator {
         return (true, String::from(username), groups);
     }
 
-    fn new() -> Self {
+    fn new(arguments: &HashMap<String, Vec<String>>) -> Self {
         //Get ldap server url, default to ldap://localhost:389
         let ldap_server_url =
             env::var("LDAP_SERVER_URL").unwrap_or("ldap://localhost:3893".to_string());

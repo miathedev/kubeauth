@@ -57,7 +57,7 @@ async fn run_auth_pipeline(
         match authenticator.as_str() {
             "json_auth" => {
                 //Create json auther
-                let json_auther = JsonAuthenticator::new();
+                let json_auther = JsonAuthenticator::new(arguments);
 
                 //Run auth
                 let (auth, username, groups) = json_auther.auth(token, &arguments).await;
@@ -70,7 +70,7 @@ async fn run_auth_pipeline(
             }
             "ldap_auth" => {
                 //Create ldap auther
-                let ldap_auther = authenticators::ldap::LdapAuthenticator::new();
+                let ldap_auther = authenticators::ldap::LdapAuthenticator::new(arguments);
 
                 //Run auth
                 let (auth, username, groups) = ldap_auther.auth(token, &arguments).await;
