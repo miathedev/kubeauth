@@ -114,7 +114,7 @@ spec:
         image: ghcr.io/miathedev/kubeauth:main
         imagePullPolicy: Always
         ports:
-        - containerPort: 8080
+        - containerPort: 8000
         resources:
           limits:
             memory: "128Mi"
@@ -151,7 +151,9 @@ spec:
         - name: glauth-config
           mountPath: /etc/glauth
           readOnly: true
-        args: ["-f", "/etc/glauth"]
+        #args: ["--help"]
+        #Set CMD
+        command: ["glauth -c /etc/glauth/glauth.cfg"]
       volumes:
       - name: glauth-config
         configMap:
