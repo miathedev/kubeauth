@@ -3,6 +3,23 @@
 ___
 # How to install kubeauth
 
+## Arguments
+```
+KubeAuth is a simple authentication provider for kubernetes.
+It is used to validate tokens sent by the kubernetes api server.
+Usage: kubeauth -a <authenticator> [-p <port>] [-ip <ip>]
+Authenticators:
+        json_auth: Uses a json file to authenticate users
+        ldap_auth: Uses ldap to authenticate users
+Flags:
+        -h, --help: Prints this help message
+Arguments:
+        -a, --authenticator: The authenticator to use
+        -p, --port: The port to listen on
+        -ip, --ip: The ip to listen on
+Example:
+        kubeauth -a json_auth -p 8000 -ip 0.0.0.0
+```
 ## What is kubeauth
 kubeauth is a experimental simple authentication backend for kubernetes. It is written in rust and uses the rocket framework. It is designed to be used in conjunction with the kubeapi server using webhook token authentication.
 

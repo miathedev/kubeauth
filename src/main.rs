@@ -19,6 +19,8 @@ This application is licensed under the MIT license.
 
 //Import the required libraries
 use core::str;
+use std::collections::HashMap;
+use rocket::config::Config as RocketConfig;
 use rocket::futures;
 use rocket::http::Status;
 use rocket::response::status;
@@ -26,8 +28,8 @@ use rocket::serde::json::Json;
 use rocket::State;
 use token_review::default_token_review_response;
 
-use crate::authenticators::authenticator::AUTHENTICATORS;
 use crate::authenticators::authenticator::Authenticator;
+use crate::authenticators::authenticator::AUTHENTICATORS;
 use crate::authenticators::json::JsonAuthenticator;
 use crate::token_review::TokenRequest;
 use crate::token_review::TokenReviewResponse;
@@ -46,6 +48,7 @@ async fn index() -> &'static str {
 //fn to run authenticator pipeline
 async fn run_auth_pipeline(
     authenticators: &Vec<String>,
+    arguments: &HashMap<String, Vec<String>>, //Arguments are or could be used to pass parameters to authenticators
     token: &str,
 ) -> (bool, String, Vec<String>) {
     //Loop through authenticators
@@ -57,7 +60,7 @@ async fn run_auth_pipeline(
                 let json_auther = JsonAuthenticator::new();
 
                 //Run auth
-                let (auth, username, groups) = json_auther.auth(token).await;
+                let (auth, username, groups) = json_auther.auth(token, &arguments).await;
 
                 //Check if auth was successful
                 if auth {
@@ -70,7 +73,7 @@ async fn run_auth_pipeline(
                 let ldap_auther = authenticators::ldap::LdapAuthenticator::new();
 
                 //Run auth
-                let (auth, username, groups) = ldap_auther.auth(token).await;
+                let (auth, username, groups) = ldap_auther.auth(token, &arguments).await;
 
                 //Check if auth was successful
                 if auth {
@@ -102,8 +105,11 @@ async fn validate_token(
     //Get authenticators from rocket state
     let authenticators = shared.authenticators.lock().await;
 
+    //Get arguments from rocket state
+    let arguments = shared.arguments.lock().await;
+
     //Run auth pipeline
-    let (auth, username, groups) = run_auth_pipeline(&authenticators, token).await;
+    let (auth, username, groups) = run_auth_pipeline(&authenticators, &arguments, token).await;
 
     //Check if auth was successful
     if auth {
@@ -121,19 +127,55 @@ async fn validate_token(
 
 struct SharedData {
     authenticators: futures::lock::Mutex<Vec<String>>,
+    arguments: futures::lock::Mutex<HashMap<String, Vec<String>>>,
 }
 
 #[launch]
 fn rocket() -> _ {
     let (arguments, _flags) = Parser::new().merge_values(true).parse();
 
-    //Get authenticators
+    //If -h or --help is set, print help and exit
+    if arguments.get("h").or(arguments.get("help")).is_some_and(|x| x.len() > 0) || _flags.len() > 0
+    {
+        //Print help
+        println!("KubeAuth is a simple authentication provider for kubernetes.");
+        println!("It is used to validate tokens sent by the kubernetes api server.");
+        println!("Usage: kubeauth -a <authenticator> [-p <port>] [-ip <ip>]");
+        println!("Authenticators:");
+        println!("\tjson_auth: Uses a json file to authenticate users");
+        println!("\tldap_auth: Uses ldap to authenticate users");
+        println!("Flags:");
+        println!("\t-h, --help: Prints this help message");
+        println!("Arguments:");
+        println!("\t-a, --authenticator: The authenticator to use");
+        println!("\t-p, --port: The port to listen on");
+        println!("\t-ip, --ip: The ip to listen on");
+        println!("Example:");
+        println!("\tkubeauth -a json_auth -p 8000 -ip 0.0.0.0");
+        //Exit
+        std::process::exit(0);
+    }
+    //Get authenticators, no default param and required
     let authenticators: Vec<String> = arguments
         .get("a")
         .or(arguments.get("authenticator"))
         .expect(
             "No authenticators specified. Please specify authenticators using -a or --authenticator",
         )
+        .to_vec();
+
+    //Get optional port argument, default to 8000
+    let port: Vec<String> = arguments
+        .get("p")
+        .or(arguments.get("port"))
+        .unwrap_or(&vec!["8000".to_string()])
+        .to_vec();
+
+    //Get optional ip argument, default to 0.0.0.0
+    let ip = arguments
+        .get("ip")
+        .or(arguments.get("ip"))
+        .unwrap_or(&vec!["0.0.0.0".to_string()])
         .to_vec();
 
     //Check if authenticators are valid
@@ -166,8 +208,30 @@ fn rocket() -> _ {
     //Create shared data
     let shared_data = SharedData {
         authenticators: futures::lock::Mutex::new(authenticators_vec),
+        arguments: futures::lock::Mutex::new(arguments),
     };
-    rocket::build()
+
+    let mut config = RocketConfig::release_default();
+    //Configure port
+    match port[0].parse() {
+        Ok(port) => config.port = port,
+        Err(_) => {
+            println!("Port is not a valid number");
+            std::process::exit(1);
+        }
+    }
+
+    //Configure ip
+    match ip[0].parse() {
+        Ok(ip) => config.address = ip,
+        Err(_) => {
+            println!("IP is not a valid ip");
+            std::process::exit(1);
+        }
+    }
+    
+    rocket::custom(config)
         .manage(shared_data)
         .mount("/", routes![index, validate_token])
+        //Set port and listen on all interfaces
 }

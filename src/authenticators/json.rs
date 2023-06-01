@@ -31,7 +31,7 @@ pub struct JsonAuthenticator {
 }
 
 impl Authenticator for JsonAuthenticator {
-    async fn auth(&self, token: &str) -> (bool, String, Vec<String>) {
+    async fn auth(&self, token: &str, arguments: &HashMap<String, Vec<String>>) -> (bool, String, Vec<String>) {
         //Split token by :
         let token_split: Vec<&str> = token.split(":").collect();
 
