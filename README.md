@@ -20,8 +20,18 @@ Arguments:
         -a, --authenticator: The authenticator to use
         -p, --port: The port to listen on
         -ip, --ip: The ip to listen on
+        -crt, --cert: The certificate to use
+        -key, --key: The cert key to use
+        json_auth:
+                --json_user_file_path: The users json file to use
+        ldap_auth: NOT YET IMPLEMENTED, they are just reserved
+                --ldap_host: The ldap host to use
+                --ldap_port: The ldap port to use
+                --ldap_base_dn: The ldap base dn to use
+                --ldap_user_dn: The ldap user dn to use
+                --ldap_password: The ldap searchuser password to use
 Example:
-        kubeauth -a json_auth -p 8000 -ip 0.0.0.0
+        kubeauth -a json_auth -p 8000 -ip 0.0.0.0 -crt cert.pem -key key.pem -u users.json
 ```
 ## What is kubeauth
 kubeauth is a experimental simple authentication backend for kubernetes. It is written in rust and uses the rocket framework. It is designed to be used in conjunction with the kubeapi server using webhook token authentication.

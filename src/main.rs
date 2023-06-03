@@ -21,7 +21,9 @@ This application is licensed under the MIT license.
 use core::str;
 use std::collections::HashMap;
 use authenticators::ldap::LdapAuthenticator;
+use rocket::config::CipherSuite;
 use rocket::config::Config as RocketConfig;
+use rocket::config::TlsConfig;
 use rocket::futures;
 use rocket::http::Status;
 use rocket::response::status;
@@ -154,8 +156,24 @@ fn rocket() -> _ {
         println!("\t-a, --authenticator: The authenticator to use");
         println!("\t-p, --port: The port to listen on");
         println!("\t-ip, --ip: The ip to listen on");
+        println!("\t-crt, --cert: The certificate to use");
+        println!("\t-key, --key: The cert key to use");
+
+        //Authenticator specific arguments
+        println!("\tjson_auth:");
+        println!("\t\t--json_user_file_path: The users json file to use");
+
+        //TODO: Add ldap arguments, there are not implemented yet
+        println!("\tldap_auth:");
+        println!("\t\t--ldap_url: The ldap host url to use");
+        println!("\t\t--ldap_bind_dn: The ldap bind dn to use");
+        println!("\t\t--ldap_bind_password: The ldap bind password to use");
+        println!("\t\t--ldap_base_dn: The ldap base dn to use");
+        println!("\t\t--ldap_filter: The ldap filter to use");
+        
+
         println!("Example:");
-        println!("\tkubeauth -a json_auth -p 8000 -ip 0.0.0.0");
+        println!("\tRUST_BACKTRACE=1 cargo run -- -a json_auth --json_user_file_path users.json -crt cert.pem -key key.pe");
         //Exit
         std::process::exit(0);
     }
@@ -180,6 +198,19 @@ fn rocket() -> _ {
         .get("ip")
         .or(arguments.get("ip"))
         .unwrap_or(&vec!["0.0.0.0".to_string()])
+        .to_vec();
+
+    //Get required cert argument
+    let cert = arguments
+        .get("cert")
+        .or(arguments.get("crt"))
+        .expect("Cert arg is required")
+        .to_vec();
+
+    //Get required key argument
+    let key = arguments
+        .get("key")
+        .expect("Cert Key arg is required")
         .to_vec();
 
     //Check if authenticators are valid
@@ -239,7 +270,25 @@ fn rocket() -> _ {
             std::process::exit(1);
         }
     }
+
+    //Check if cert and key are valid paths and valid certs
+    if !std::path::Path::new(&cert[0]).exists() {
+        println!("Cert path is not valid");
+        std::process::exit(1);
+    }
+    if !std::path::Path::new(&key[0]).exists() {
+        println!("Cert key path is not valid");
+        std::process::exit(1);
+    }
+
+    //Configure cert and key, both are required, no unwrap
+    let tls_config = TlsConfig::from_paths(cert[0].clone(), key[0].clone());
+    config.tls = Some(tls_config);
+
+
+
     
+    //config   
     rocket::custom(config)
         .manage(shared_data)
         .mount("/", routes![index, validate_token])

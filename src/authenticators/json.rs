@@ -90,7 +90,7 @@ impl Authenticator for JsonAuthenticator {
         println!("Loading json_auth authenticator");
         
         //Get -u --users-file-path argument
-        let users_file_path = arguments.get("u").or(arguments.get("user_file_path"));
+        let users_file_path = arguments.get("json_user_file_path");
 
         //if users_file_path is None, try to get it from env var USERS_FILE_PATH
         let users_file_path = match users_file_path {
