@@ -173,7 +173,7 @@ fn rocket() -> _ {
         
 
         println!("Example:");
-        println!("\tRUST_BACKTRACE=1 cargo run -- -a json_auth --json_user_file_path users.json -crt cert.pem -key key.pe");
+        println!("\tcargo run -- -a json_auth --json_user_file_path users.json -crt contrib/cert.pem -key contrib/key.pem");
         //Exit
         std::process::exit(0);
     }

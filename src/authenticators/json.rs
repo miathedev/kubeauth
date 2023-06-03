@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, fs::File, io::BufReader};
+use std::{collections::HashMap, env, fs::File, io::BufReader, path::Path};
 
 use argon2::{
     password_hash::{
@@ -28,6 +28,7 @@ struct Users {
 //Auther struct for using users.json
 pub struct JsonAuthenticator {
     users: HashMap<String, User>,
+    hashed_pw: bool,
 }
 
 impl Authenticator for JsonAuthenticator {
@@ -50,11 +51,10 @@ impl Authenticator for JsonAuthenticator {
             //Get the user
             let user = users.get(username).unwrap();
 
-            //Get state if hashed is enabled
-            let hashed = env::var("HASHED_PASSWORDS").unwrap_or("false".to_string()) == "true";
+            //Get state if hashed is enabled via arguement
 
             //If hashed password is set, hash the password and compare it to the hashed password, otherwise plain compare
-            if hashed {
+            if self.hashed_pw {
                 //Get salt from env var, default to pepper
                 let salt = SaltString::generate(&mut OsRng);
                 let argon2 = Argon2::default();
@@ -89,26 +89,48 @@ impl Authenticator for JsonAuthenticator {
     fn new (arguments: HashMap<String, Vec<String>>) -> Self {
         println!("Loading json_auth authenticator");
         
+        let users_file_path: String;
         //Get -u --users-file-path argument
-        let users_file_path = arguments.get("json_user_file_path");
-
-        //if users_file_path is None, try to get it from env var USERS_FILE_PATH
-        let users_file_path = match users_file_path {
-            Some(users_file_path) => users_file_path[0].clone(),
-            None => env::var("USERS_FILE_PATH").expect("Failed to get users file path from env var and no -u or --users-file-path argument was specified")
-        };
-        
-        //Check if file exists
-        if !std::path::Path::new(&users_file_path).exists() {
-            panic!("Users file does not exist or env var USERS_FILE_PATH is not set");
+        match arguments.get("json_user_file_path") {
+            Some(path) => {
+                //Check if users_file_path is set
+                if path.is_empty() {
+                    println!("--json_user_file_path is required for json_auth authenticator");
+                    std::process::exit(1);
+                }
+                //Check if users_file_path is valid
+                if !Path::new(&path[0]).exists() {
+                    println!("--json_user_file_path is not valid");
+                    std::process::exit(1);
+                }
+                //Set users_file_path
+                users_file_path = path[0].clone();
+            },
+            None => {
+                println!("--json_user_file_path is required for json_auth authenticator");
+                std::process::exit(1);
+            }
         }
-
+        
         //Get the users
         let users = JsonAuthenticator::get_users(&users_file_path);
 
+        let mut hashed = false;
+        //Get --json_hashed_pw argument
+        match arguments.get("json_hashed_pw") {
+            Some(hashed_pw) => {
+                //Check if hashed_pw is true
+                if hashed_pw[0] == "true" {
+                    //Set hashed to true
+                    hashed = true;
+                }
+            },
+            None => ()
+        }
         //Return the users auther
         JsonAuthenticator {
             users,
+            hashed_pw: hashed
         }
     }
 }
